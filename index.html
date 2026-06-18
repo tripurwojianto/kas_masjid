@@ -3,6 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1b5e20">
+
+<script>
+  // Daftarkan Service Worker secara otomatis
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+</script>
   <title>Laporan Transparansi Kas Masjid</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>

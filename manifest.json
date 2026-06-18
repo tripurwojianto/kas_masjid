@@ -1,0 +1,23 @@
+{
+  "short_name": "Kas At-Taqwa",
+  "name": "Sistem Kas Mandiri At-Taqwa",
+  "icons": [
+    {
+      "src": "https://demo.kasmasjid.web.id/icon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://demo.kasmasjid.web.id/icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#1b5e20",
+  "theme_color": "#1b5e20",
+  "display": "standalone",
+  "orientation": "portrait"
+}
