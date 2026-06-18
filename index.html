@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Transparansi Kas Masjid</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #faf8f5; font-family: system-ui, sans-serif; }
+    .hijau-masjid { background-color: #1b5e20; }
+  </style>
+</head>
+<body class="p-4 md:p-8 max-w-md mx-auto mb-12" onload="muatDataPublikVercel()">
+
+  <div class="flex items-center space-x-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+    <div class="w-10 h-10 hijau-masjid rounded-full flex items-center justify-center text-lg">🕌</div>
+    <div>
+      <h1 class="text-sm font-bold text-gray-800">Transparansi Kas Masjid</h1>
+      <p class="text-[10px] text-gray-400">Laporan Keuangan Riil Umat (Hosted via Vercel)</p>
+    </div>
+  </div>
+
+  <div class="bg-gradient-to-br from-emerald-800 to-emerald-950 text-white rounded-2xl p-5 shadow-sm border border-emerald-900 mb-6">
+    <p class="text-[11px] uppercase tracking-wider opacity-75 font-semibold">Total Saldo Kas Saat Ini</p>
+    <div class="flex items-baseline space-x-1 mt-1">
+      <span class="text-sm opacity-90 font-medium">Rp</span>
+      <h2 id="txtSaldoPublik" class="text-2xl font-black tracking-tight">Memuat...</h2>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
+    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Riwayat Transaksi Terakhir</h3>
+    <div id="loadingText" class="text-xs text-gray-400 text-center py-4">Menghubungkan ke server amanah...</div>
+    <div id="kontainerMutasi" class="space-y-3 hidden"></div>
+  </div>
+
+  <script>
+    // MASUKKAN URL MACROS EXEC ANDA DI SINI SEBAGAI ENGINE API
+    const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzkAfcO46bOTeAl-tXNeeeLmRErtzs6ogw-TUNDQKyG7d2KPNy7rDZaEpSnzkLEY7ot/exec";
+
+    function muatDataPublikVercel() {
+      // Tembak doPost di Apps Script dengan parameter aksi khusus
+      fetch(API_URL_APPS_SCRIPT, {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "text/plain" }, // Gunakan text/plain untuk bypass preflight CORS Google
+        body: JSON.stringify({ aksi: "ambilDataPublik" })
+      })
+      .then(response => response.json())
+      .then(res => {
+        document.getElementById('txtSaldoPublik').innerText = Number(res.saldo).toLocaleString('id-ID');
+        
+        const kontainer = document.getElementById('kontainerMutasi');
+        document.getElementById('loadingText').classList.add('hidden');
+        kontainer.classList.remove('hidden');
+        kontainer.innerHTML = "";
+
+        res.mutasi.forEach(item => {
+          const div = document.createElement('div');
+          div.className = "p-3 rounded-xl border-l-4 text-xs bg-gray-50 " + 
+                        (item.jenis === "Masuk" ? "border-emerald-600" : "border-red-500");
+          
+          div.innerHTML = `
+            <div class="flex justify-between font-bold text-gray-700">
+              <span>${item.nama}</span>
+              <span class="${item.jenis === 'Masuk' ? 'text-emerald-700' : 'text-red-600'}">
+                ${item.jenis === 'Masuk' ? '+' : '-'} Rp ${Number(item.nominal).toLocaleString('id-ID')}
+              </span>
+            </div>
+            <div class="text-gray-400 text-[10px] mt-1 flex justify-between">
+              <span>${item.keterangan}</span>
+              <span>${item.tanggal}</span>
+            </div>
+          `;
+          kontainer.appendChild(div);
+        });
+      })
+      .catch(err => {
+        document.getElementById('loadingText').innerText = "Gagal memuat data: " + err;
+      });
+    }
+  </script>
+</body>
+</html>
