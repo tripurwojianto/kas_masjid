@@ -97,6 +97,63 @@
       inisialisasiLogo();
       muatDataPublik();
     });
-  </script>
+ // Pastikan URL Macros Anda sudah sesuai
+    const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzBGi_JETGdPf2oJ7xp0rYhThmofSTnkpE3WST387258xJb4uV9NGHQlnO2Mcea6YZe/exec";
+
+    function muatDataPublikVercel() {
+      fetch(API_URL_APPS_SCRIPT, {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ aksi: "ambilDataPublik" })
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Jaringan bermasalah");
+        return response.json();
+      })
+      .then(res => {
+        // PERBAIKAN: Langsung baca res.saldo karena Google tidak membungkusnya lagi
+        if (res && res.saldo !== undefined) {
+          document.getElementById('txtSaldoPublik').innerText = Number(res.saldo).toLocaleString('id-ID');
+        } else {
+          document.getElementById('txtSaldoPublik').innerText = "0";
+        }
+        
+        const kontainer = document.getElementById('kontainerMutasi');
+        document.getElementById('loadingText').classList.add('hidden');
+        kontainer.classList.remove('hidden');
+        kontainer.innerHTML = "";
+
+        // PERBAIKAN: Langsung baca res.mutasi
+        if (res && res.mutasi && res.mutasi.length > 0) {
+          res.mutasi.forEach(item => {
+            const div = document.createElement('div');
+            div.className = "p-3 rounded-xl border-l-4 text-xs bg-gray-50 mb-2 " + 
+                          (item.jenis === "Masuk" ? "border-emerald-600" : "border-red-500");
+            
+            div.innerHTML = `
+              <div class="flex justify-between font-bold text-gray-700">
+                <span>${item.nama}</span>
+                <span class="${item.jenis === 'Masuk' ? 'text-emerald-700' : 'text-red-600'}">
+                  ${item.jenis === 'Masuk' ? '+' : '-'} Rp ${Number(item.nominal).toLocaleString('id-ID')}
+                </span>
+              </div>
+              <div class="text-gray-400 text-[10px] mt-1 flex justify-between">
+                <span>${item.keterangan}</span>
+                <span>${item.tanggal}</span>
+              </div>
+            `;
+            kontainer.appendChild(div);
+          });
+        } else {
+          kontainer.innerHTML = "<div class='text-center text-xs text-gray-400 py-4'>Belum ada riwayat transaksi.</div>";
+        }
+      })
+      .catch(err => {
+        document.getElementById('loadingText').innerText = "Gagal memuat data: " + err;
+        document.getElementById('txtSaldoPublik').innerText = "Error";
+      });
+    }
+  </script>  
 </body>
 </html>
