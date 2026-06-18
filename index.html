@@ -2,18 +2,19 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#1b5e20">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1b5e20">
 
-<script>
-  // Daftarkan Service Worker secara otomatis
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
-    });
-  }
-</script>
+  <script>
+    // Daftarkan PWA Service Worker secara otomatis
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+  
   <title>Laporan Transparansi Kas Masjid</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -21,10 +22,13 @@
     .hijau-masjid { background-color: #1b5e20; }
   </style>
 </head>
-<body class="p-4 md:p-8 max-w-md mx-auto mb-12" onload="muatDataPublikVercel()">
+<body class="p-4 md:p-8 max-w-md mx-auto mb-16" onload="muatDataPublikVercel()">
 
   <div class="flex items-center space-x-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
-    <div class="w-10 h-10 hijau-masjid rounded-full flex items-center justify-center text-lg">🕌</div>
+    <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-inner overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
+      <img id="imgLogoHeader" src="" alt="Logo" class="w-full h-full object-cover hidden">
+      <div id="fallbackIcon" class="text-xl">🕌</div>
+    </div>
     <div>
       <h1 class="text-sm font-bold text-gray-800">Kas Masjid At Taqwa</h1>
       <p class="text-[10px] text-gray-400">Perum BMI 1, Dawuan Tengah, Cikampek, Karawang</p>
@@ -44,11 +48,34 @@
     <div id="loadingText" class="text-xs text-gray-400 text-center py-4">Menghubungkan ke server amanah...</div>
     <div id="kontainerMutasi" class="space-y-3 hidden"></div>
   </div>
-<script>
-    // Pastikan URL Macros Anda sudah sesuai
-    const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzBGi_JETGdPf2oJ7xp0rYhThmofSTnkpE3WST387258xJb4uV9NGHQlnO2Mcea6YZe/exec";
+
+  <div class="text-center py-8 text-[11px] text-gray-400 space-y-1">
+    <p>Dikembangkan secara swadaya oleh <a href="https://kasmasjid.web.id" target="_blank" class="text-emerald-700 font-bold hover:underline">KasMasjid</a></p>
+    <p class="text-[9px] opacity-75">Sovereign Financial Workflow System • Built for Digital Asset Trust</p>
+  </div>
+
+  <script>
+    // 1. TEMPEL URL LOGO 500PX ANDA DI SINI (Bisa link ImageKit atau lokal /icon.png)
+    const URL_LOGO_MASJID = "https://ik.imagekit.io/kulinaweb/logo-attaqwa.png?updatedAt=1781786644208"; 
+
+    // URL Web App Apps Script Anda
+    const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfyf.../exec";
+
+    // Fungsi Render Logo Efisien
+    function inisialisasiLogoHeader() {
+      const img = document.getElementById('imgLogoHeader');
+      const fallback = document.getElementById('fallbackIcon');
+      if (URL_LOGO_MASJID && URL_LOGO_MASJID.trim() !== "") {
+        img.src = URL_LOGO_MASJID;
+        img.classList.remove('hidden');
+        fallback.classList.add('hidden');
+      }
+    }
 
     function muatDataPublikVercel() {
+      // Jalankan fungsi tampil logo saat halaman dimuat
+      inisialisasiLogoHeader();
+
       fetch(API_URL_APPS_SCRIPT, {
         method: "POST",
         mode: "cors",
@@ -60,9 +87,11 @@
         return response.json();
       })
       .then(res => {
-        // PERBAIKAN: Langsung baca res.saldo karena Google tidak membungkusnya lagi
-        if (res && res.saldo !== undefined) {
-          document.getElementById('txtSaldoPublik').innerText = Number(res.saldo).toLocaleString('id-ID');
+        // Antisipasi pembacaan string murni maupun objek JSON ter-parse
+        let data = typeof res === "string" ? JSON.parse(res) : res;
+
+        if (data && data.saldo !== undefined) {
+          document.getElementById('txtSaldoPublik').innerText = Number(data.saldo).toLocaleString('id-ID');
         } else {
           document.getElementById('txtSaldoPublik').innerText = "0";
         }
@@ -72,9 +101,8 @@
         kontainer.classList.remove('hidden');
         kontainer.innerHTML = "";
 
-        // PERBAIKAN: Langsung baca res.mutasi
-        if (res && res.mutasi && res.mutasi.length > 0) {
-          res.mutasi.forEach(item => {
+        if (data && data.mutasi && data.mutasi.length > 0) {
+          data.mutasi.forEach(item => {
             const div = document.createElement('div');
             div.className = "p-3 rounded-xl border-l-4 text-xs bg-gray-50 mb-2 " + 
                           (item.jenis === "Masuk" ? "border-emerald-600" : "border-red-500");
@@ -99,7 +127,7 @@
       })
       .catch(err => {
         document.getElementById('loadingText').innerText = "Gagal memuat data: " + err;
-        document.getElementById('txtSaldoPublik').innerText = "Error";
+        document.getElementById('txtSaldoPublik').innerText = "0";
       });
     }
   </script>  
