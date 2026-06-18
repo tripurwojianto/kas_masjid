@@ -1,3 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Transparansi Kas Masjid</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #faf8f5; font-family: system-ui, sans-serif; }
+    .hijau-masjid { background-color: #1b5e20; }
+  </style>
+</head>
+<body class="p-4 md:p-8 max-w-md mx-auto mb-12" onload="muatDataPublikVercel()">
+
+  <div class="flex items-center space-x-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+    <div class="w-10 h-10 hijau-masjid rounded-full flex items-center justify-center text-lg">🕌</div>
+    <div>
+      <h1 class="text-sm font-bold text-gray-800">Transparansi Kas Masjid</h1>
+      <p class="text-[10px] text-gray-400">Laporan Keuangan Riil Umat (Hosted via Vercel)</p>
+    </div>
+  </div>
+
+  <div class="bg-gradient-to-br from-emerald-800 to-emerald-950 text-white rounded-2xl p-5 shadow-sm border border-emerald-900 mb-6">
+    <p class="text-[11px] uppercase tracking-wider opacity-75 font-semibold">Total Saldo Kas Saat Ini</p>
+    <div class="flex items-baseline space-x-1 mt-1">
+      <span class="text-sm opacity-90 font-medium">Rp</span>
+      <h2 id="txtSaldoPublik" class="text-2xl font-black tracking-tight">Memuat...</h2>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
+    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Riwayat Transaksi Terakhir</h3>
+    <div id="loadingText" class="text-xs text-gray-400 text-center py-4">Menghubungkan ke server amanah...</div>
+    <div id="kontainerMutasi" class="space-y-3 hidden"></div>
+  </div>
 <script>
     // Pastikan URL Macros Anda sudah sesuai
     const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzBGi_JETGdPf2oJ7xp0rYhThmofSTnkpE3WST387258xJb4uV9NGHQlnO2Mcea6YZe/exec";
@@ -56,4 +91,6 @@
         document.getElementById('txtSaldoPublik').innerText = "Error";
       });
     }
-  </script>
+  </script>  
+</body>
+</html>
