@@ -2,102 +2,50 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1b5e20">
+
+<script>
+  // Daftarkan Service Worker secara otomatis
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+</script>
   <title>Laporan Transparansi Kas Masjid</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1b5e20">
   <style>
     body { background-color: #faf8f5; font-family: system-ui, sans-serif; }
     .hijau-masjid { background-color: #1b5e20; }
-    .hijau-teks { color: #1b5e20; }
   </style>
 </head>
-<body class="p-4 md:p-8 max-w-md mx-auto mb-16">
+<body class="p-4 md:p-8 max-w-md mx-auto mb-12" onload="muatDataPublikVercel()">
 
-  <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center space-y-3">
-    <div class="w-20 h-20 mx-auto bg-gray-50 rounded-full flex items-center justify-center shadow-inner overflow-hidden border border-gray-100">
-      <img id="imgLogoMasjid" src="" alt="Logo Masjid" class="w-full h-full object-cover hidden">
-      <div id="fallbackLogo" class="text-3xl">🕌</div>
-    </div>
-    
-    <div class="space-y-1">
-      <h1 id="lblNamaMasjidPublik" class="text-base font-black text-gray-800">Masjid At-Taqwa</h1>
-      <p class="text-[11px] text-gray-400 font-medium">Sistem Transparansi Arus Kas & Aset Publik</p>
+  <div class="flex items-center space-x-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
+    <div class="w-10 h-10 hijau-masjid rounded-full flex items-center justify-center text-lg">🕌</div>
+    <div>
+      <h1 class="text-sm font-bold text-gray-800">Kas Masjid At Taqwa</h1>
+      <p class="text-[10px] text-gray-400">Perum BMI 1, Dawuan Tengah, Cikampek, Karawang</p>
     </div>
   </div>
 
-  <div class="mt-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
-    <div class="border-b pb-3 flex justify-between items-center">
-      <h2 class="text-xs font-bold text-gray-800 flex items-center">
-        <span class="mr-1.5">📊</span> Ringkasan Kas Saat Ini
-      </h2>
-      <span class="text-[9px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Live Data</span>
-    </div>
-    
-    <div class="text-center py-2">
-      <p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Total Saldo Konsolidasi</p>
-      <p class="text-2xl font-black hijau-teks mt-1">Rp <span id="lblSaldoPublik">0</span></p>
+  <div class="bg-gradient-to-br from-emerald-800 to-emerald-950 text-white rounded-2xl p-5 shadow-sm border border-emerald-900 mb-6">
+    <p class="text-[11px] uppercase tracking-wider opacity-75 font-semibold">Total Saldo Kas Saat Ini</p>
+    <div class="flex items-baseline space-x-1 mt-1">
+      <span class="text-sm opacity-90 font-medium">Rp</span>
+      <h2 id="txtSaldoPublik" class="text-2xl font-black tracking-tight">Memuat...</h2>
     </div>
   </div>
 
-  <div class="text-center py-8 text-[11px] text-gray-400 space-y-1">
-    <p>Dikembangkan secara swadaya oleh <a href="https://kasmasjid.web.id" target="_blank" class="text-emerald-700 font-bold hover:underline">KasMasjid</a></p>
-    <p class="text-[9px] opacity-75">Sovereign Financial Workflow System • Built for Digital Asset Trust</p>
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
+    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Riwayat Transaksi Terakhir</h3>
+    <div id="loadingText" class="text-xs text-gray-400 text-center py-4">Menghubungkan ke server amanah...</div>
+    <div id="kontainerMutasi" class="space-y-3 hidden"></div>
   </div>
-
-  <script>
-    // 1. EDIT DI SINI: Tempel URL ImageKit atau jalur lokal logo baru Anda di bawah ini
-    const CONFIG_LOGO_URL = "https://ik.imagekit.io/kulinaweb/logo-attaqwa.png?updatedAt=1781786644208"; 
-    
-    // Alamat Web App Apps Script Anda (URL doGet publik)
-    const ENDPOINT_API_PUBLIK = "https://script.google.com/macros/s/AKfyf.../exec?view=publik";
-
-    // Fungsi untuk merender logo secara aman
-    function inisialisasiLogo() {
-      const imgEl = document.getElementById('imgLogoMasjid');
-      const fallbackEl = document.getElementById('fallbackLogo');
-      
-      if (CONFIG_LOGO_URL && CONFIG_LOGO_URL.trim() !== "") {
-        imgEl.src = CONFIG_LOGO_URL;
-        imgEl.classList.remove('hidden');
-        fallbackEl.classList.add('hidden');
-      } else {
-        imgEl.classList.add('hidden');
-        fallbackEl.classList.remove('hidden');
-      }
-    }
-
-    // Fungsi mengambil saldo live dari Google Sheets backend
-    function muatDataPublik() {
-      fetch(ENDPOINT_API_PUBLIK)
-        .then(response => response.json())
-        .then(data => {
-          if(data && data.saldo) {
-            document.getElementById('lblSaldoPublik').innerText = Number(data.saldo).toLocaleString('id-ID');
-            if(data.namaMasjid) {
-              document.getElementById('lblNamaMasjidPublik').innerText = data.namaMasjid;
-            }
-          }
-        })
-        .catch(err => console.error("Gagal sinkronisasi data publik:", err));
-    }
-
-    // Daftarkan PWA Service Worker agar aplikasi bisa diinstal murni tanpa badge Chrome
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('PWA Service Worker aktif mendampingi jamaah.'))
-          .catch(err => console.error('PWA SW Kendala:', err));
-      });
-    }
-
-    // Eksekusi fungsi saat halaman terbuka sempurna
-    window.addEventListener('DOMContentLoaded', () => {
-      inisialisasiLogo();
-      muatDataPublik();
-    });
- // Pastikan URL Macros Anda sudah sesuai
+<script>
+    // Pastikan URL Macros Anda sudah sesuai
     const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzBGi_JETGdPf2oJ7xp0rYhThmofSTnkpE3WST387258xJb4uV9NGHQlnO2Mcea6YZe/exec";
 
     function muatDataPublikVercel() {
