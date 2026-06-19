@@ -7,7 +7,6 @@
   <meta name="theme-color" content="#1b5e20">
 
   <script>
-    // Daftarkan PWA Service Worker secara otomatis
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');
@@ -25,7 +24,7 @@
 <body class="p-4 md:p-8 max-w-md mx-auto mb-16" onload="muatDataPublikVercel()">
 
   <div class="flex items-center space-x-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
-    <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-inner overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
+    <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-inner overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
       <img id="imgLogoHeader" src="" alt="Logo" class="w-full h-full object-cover hidden">
       <div id="fallbackIcon" class="text-xl">🕌</div>
     </div>
@@ -50,18 +49,17 @@
   </div>
 
   <div class="text-center py-8 text-[11px] text-gray-400 space-y-1">
-    <p>Dikembangkan secara swadaya oleh <a href="https://kasmasjid.web.id" target="_blank" class="text-emerald-700 font-bold hover:underline">KasMasjid</a></p>
+    <p>Dikembangkan secara swadaya oleh <a href="https://www.kasmasjid.web.id" target="_blank" class="text-emerald-700 font-bold hover:underline">KasMasjid</a></p>
     <p class="text-[9px] opacity-75">Sovereign Financial Workflow System • Built for Digital Asset Trust</p>
   </div>
 
   <script>
-    // 1. TEMPEL URL LOGO 500PX ANDA DI SINI (Bisa link ImageKit atau lokal /icon.png)
+    // 1. PENGATURAN LOGO (Ganti ke jalur lokal /icon.png agar aman dari blokir CORS browser)
     const URL_LOGO_MASJID = "https://ik.imagekit.io/kulinaweb/logo-attaqwa.png?updatedAt=1781786644208"; 
 
     // URL Web App Apps Script Anda
-    const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfyf.../exec";
+    const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzBGi_JETGdPf2oJ7xp0rYhThmofSTnkpE3WST387258xJb4uV9NGHQlnO2Mcea6YZe/exec";
 
-    // Fungsi Render Logo Efisien
     function inisialisasiLogoHeader() {
       const img = document.getElementById('imgLogoHeader');
       const fallback = document.getElementById('fallbackIcon');
@@ -73,7 +71,6 @@
     }
 
     function muatDataPublikVercel() {
-      // Jalankan fungsi tampil logo saat halaman dimuat
       inisialisasiLogoHeader();
 
       fetch(API_URL_APPS_SCRIPT, {
@@ -87,9 +84,13 @@
         return response.json();
       })
       .then(res => {
-        // Antisipasi pembacaan string murni maupun objek JSON ter-parse
-        let data = typeof res === "string" ? JSON.parse(res) : res;
+        // SOLUSI UTAMA: Paksa parsing string murni dari Apps Script menjadi objek JavaScript yang valid
+        let data = res;
+        if (typeof res === "string") {
+          data = JSON.parse(res);
+        }
 
+        // Tampilkan Saldo secara presisi
         if (data && data.saldo !== undefined) {
           document.getElementById('txtSaldoPublik').innerText = Number(data.saldo).toLocaleString('id-ID');
         } else {
@@ -101,6 +102,7 @@
         kontainer.classList.remove('hidden');
         kontainer.innerHTML = "";
 
+        // Tampilkan Log Transaksi
         if (data && data.mutasi && data.mutasi.length > 0) {
           data.mutasi.forEach(item => {
             const div = document.createElement('div');
@@ -126,7 +128,8 @@
         }
       })
       .catch(err => {
-        document.getElementById('loadingText').innerText = "Gagal memuat data: " + err;
+        console.error(err);
+        document.getElementById('loadingText').innerText = "Gagal menyinkronkan data amanah.";
         document.getElementById('txtSaldoPublik').innerText = "0";
       });
     }
