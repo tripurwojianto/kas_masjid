@@ -43,22 +43,27 @@
   </div>
 
   <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
-    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Riwayat Transaksi Terakhir</h3>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+      <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Riwayat Transaksi Terakhir</h3>
+      <input type="text" id="txtCariMutasi" oninput="filterDataMutasi()" 
+             placeholder="🔎 Cari nama donatur, atau nota..." 
+             class="w-full sm:w-64 text-xs px-3 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:border-emerald-600 bg-gray-50">
+    </div>
+
     <div id="loadingText" class="text-xs text-gray-400 text-center py-4">Menghubungkan ke server amanah...</div>
     <div id="kontainerMutasi" class="space-y-3 hidden"></div>
   </div>
 
   <div class="text-center py-8 text-[11px] text-gray-400 space-y-1">
     <p>Dikembangkan secara swadaya oleh <a href="https://www.kasmasjid.web.id" target="_blank" class="text-emerald-700 font-bold hover:underline">KasMasjid</a></p>
-    <p class="text-[9px] opacity-75">Sovereign Financial Workflow System • Built for Digital Asset Trust</p>
+    <p class="text-[9px] opacity-75">Sistem Alur Kerja Keuangan Mandiri • Dibangun untuk Kepercayaan Aset Digital</p>
   </div>
 
   <script>
-    // 1. PENGATURAN LOGO (Ganti ke jalur lokal /icon.png agar aman dari blokir CORS browser)
     const URL_LOGO_MASJID = "https://ik.imagekit.io/kulinaweb/logo-attaqwa.png?updatedAt=1781786644208"; 
-
-    // URL Web App Apps Script Anda
     const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzBGi_JETGdPf2oJ7xp0rYhThmofSTnkpE3WST387258xJb4uV9NGHQlnO2Mcea6YZe/exec";
+
+    let masterDataMutasi = [];
 
     function inisialisasiLogoHeader() {
       const img = document.getElementById('imgLogoHeader');
@@ -79,52 +84,23 @@
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ aksi: "ambilDataPublik" })
       })
-      .then(response => {
-        if (!response.ok) throw new Error("Jaringan bermasalah");
-        return response.json();
-      })
+      .then(response => response.json())
       .then(res => {
-        // SOLUSI UTAMA: Paksa parsing string murni dari Apps Script menjadi objek JavaScript yang valid
+        // PERBAIKAN: Menyatukan logika parsing data ke dalam block fetch yang benar
         let data = res;
         if (typeof res === "string") {
           data = JSON.parse(res);
         }
 
-        // Tampilkan Saldo secara presisi
         if (data && data.saldo !== undefined) {
           document.getElementById('txtSaldoPublik').innerText = Number(data.saldo).toLocaleString('id-ID');
         } else {
           document.getElementById('txtSaldoPublik').innerText = "0";
         }
         
-        const kontainer = document.getElementById('kontainerMutasi');
-        document.getElementById('loadingText').classList.add('hidden');
-        kontainer.classList.remove('hidden');
-        kontainer.innerHTML = "";
-
-        // Tampilkan Log Transaksi
-        if (data && data.mutasi && data.mutasi.length > 0) {
-          data.mutasi.forEach(item => {
-            const div = document.createElement('div');
-            div.className = "p-3 rounded-xl border-l-4 text-xs bg-gray-50 mb-2 " + 
-                          (item.jenis === "Masuk" ? "border-emerald-600" : "border-red-500");
-            
-            div.innerHTML = `
-              <div class="flex justify-between font-bold text-gray-700">
-                <span>${item.nama}</span>
-                <span class="${item.jenis === 'Masuk' ? 'text-emerald-700' : 'text-red-600'}">
-                  ${item.jenis === 'Masuk' ? '+' : '-'} Rp ${Number(item.nominal).toLocaleString('id-ID')}
-                </span>
-              </div>
-              <div class="text-gray-400 text-[10px] mt-1 flex justify-between">
-                <span>${item.keterangan}</span>
-                <span>${item.tanggal}</span>
-              </div>
-            `;
-            kontainer.appendChild(div);
-          });
-        } else {
-          kontainer.innerHTML = "<div class='text-center text-xs text-gray-400 py-4'>Belum ada riwayat transaksi.</div>";
+        if (data && data.mutasi) {
+          masterDataMutasi = data.mutasi;
+          tampilkanKeLayar(masterDataMutasi);
         }
       })
       .catch(err => {
@@ -132,6 +108,49 @@
         document.getElementById('loadingText').innerText = "Gagal menyinkronkan data amanah.";
         document.getElementById('txtSaldoPublik').innerText = "0";
       });
+    }
+
+    function tampilkanKeLayar(daftarMutasi) {
+      const kontainer = document.getElementById('kontainerMutasi');
+      document.getElementById('loadingText').classList.add('hidden');
+      kontainer.classList.remove('hidden');
+      kontainer.innerHTML = "";
+
+      if (daftarMutasi && daftarMutasi.length > 0) {
+        daftarMutasi.forEach(item => {
+          const div = document.createElement('div');
+          div.className = "p-3 rounded-xl border-l-4 text-xs bg-gray-50 mb-2 " + 
+                        (item.jenis === "Masuk" ? "border-emerald-600" : "border-red-500");
+          
+          div.innerHTML = `
+            <div class="flex justify-between font-bold text-gray-700">
+              <span>${item.nama}</span>
+              <span class="${item.jenis === 'Masuk' ? 'text-emerald-700' : 'text-red-600'}">
+                ${item.jenis === 'Masuk' ? '+' : '-'} Rp ${Number(item.nominal).toLocaleString('id-ID')}
+              </span>
+            </div>
+            <div class="text-gray-400 text-[10px] mt-1 flex justify-between">
+              <span>${item.keterangan}</span>
+              <span>${item.tanggal}</span>
+            </div>
+          `;
+          kontainer.appendChild(div);
+        });
+      } else {
+        kontainer.innerHTML = "<div class='text-center text-xs text-gray-400 py-4'>Data pencarian tidak ditemukan.</div>";
+      }
+    }
+
+    function filterDataMutasi() {
+      const kataKunci = document.getElementById('txtCariMutasi').value.toLowerCase().trim();
+      
+      const hasilSaring = masterDataMutasi.filter(item => {
+        return item.nama.toLowerCase().includes(kataKunci) || 
+               item.keterangan.toLowerCase().includes(kataKunci) ||
+               item.tanggal.toLowerCase().includes(kataKunci);
+      });
+      
+      tampilkanKeLayar(hasilSaring);
     }
   </script>  
 </body>
