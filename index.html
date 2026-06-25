@@ -3,155 +3,299 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1b5e20">
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js');
-      });
-    }
-  </script>
-  
-  <title>Laporan Transparansi Kas Masjid</title>
+  <title>Sistem Kas Mandiri Masjid - Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/png" sizes="192x192" href="https://ik.imagekit.io/kulinaweb/logo-attaqwa.png?updatedAt=1781786644208">
+  <link rel="apple-touch-icon" sizes="192x192" href="https://ik.imagekit.io/kulinaweb/logo-attaqwa.png?updatedAt=1781786644208">
   <style>
     body { background-color: #faf8f5; font-family: system-ui, sans-serif; }
     .hijau-masjid { background-color: #1b5e20; }
+    .hijau-teks { color: #1b5e20; }
   </style>
 </head>
-<body class="p-4 md:p-8 max-w-md mx-auto mb-16" onload="muatDataPublikVercel()">
+<body class="p-4 md:p-8 max-w-md mx-auto mb-16">
 
-  <div class="flex items-center space-x-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-4">
-    <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-inner overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
-      <img id="imgLogoHeader" src="" alt="Logo" class="w-full h-full object-cover hidden">
-      <div id="fallbackIcon" class="text-xl">🕌</div>
+  <div id="boxLogin" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+    <div class="text-center space-y-1">
+      <div class="w-12 h-12 hijau-masjid rounded-full flex items-center justify-center text-xl mx-auto shadow-sm">🔑</div>
+      <h2 class="text-base font-bold text-gray-800">Masuk Dasbor Takmir</h2>
+      <p class="text-[11px] text-gray-400">Silakan masukkan akun otoritas pengurus</p>
     </div>
-    <div>
-      <h1 class="text-sm font-bold text-gray-800">Kas Masjid At Taqwa</h1>
-      <p class="text-[10px] text-gray-400">Perum BMI 1, Dawuan Tengah, Cikampek, Karawang</p>
+    
+    <div class="space-y-3 pt-2">
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Username</label>
+        <input type="text" id="txtUser" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-700" placeholder="Masukkan username">
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Password</label>
+        <input type="password" id="txtPass" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-700" placeholder="Masukkan password">
+        <div class="flex items-center space-x-2 pt-1">
+  <input type="checkbox" id="chkIngatSaya" class="rounded text-emerald-700 focus:ring-emerald-600">
+  <label for="chkIngatSaya" class="text-[10px] text-gray-500 font-bold uppercase">Ingat Saya di HP Ini</label>
+</div>
+      </div>
+      <button onclick="eksekusiLogin()" class="w-full p-3 hijau-masjid text-white rounded-xl text-xs font-bold shadow-sm hover:bg-emerald-900 transition mt-2">Masuk ke Dashboard</button>
     </div>
+    <div class="text-center pt-2">
+  <button onclick="picuLupaPassword()" class="text-[10px] text-gray-400 hover:text-emerald-700 font-medium transition">
+    Lupa Password Dasbor?
+  </button>
+</div>
+
+<script>
+function picuLupaPassword() {
+  const nomorKetuaDKM = "6288973641682"; // Ganti dengan nomor WhatsApp pemilik akun spreadsheet utama
+  const pesan = encodeURIComponent("Assalamualaikum Wr. Wb. Pak Ketua, saya takmir KasMasjid lupa password untuk masuk ke Dasbor Admin. Mohon bantu riset kata sandi baru di sheet User_Auth.");
+  
+  // Buka deep link WhatsApp secara native di HP takmir
+  window.open("https://api.whatsapp.com/send?phone=" + nomorKetuaDKM + "&text=" + pesan, "_blank");
+}
+</script>
+
   </div>
 
-  <div class="bg-gradient-to-br from-emerald-800 to-emerald-950 text-white rounded-2xl p-5 shadow-sm border border-emerald-900 mb-6">
-    <p class="text-[11px] uppercase tracking-wider opacity-75 font-semibold">Total Saldo Kas Saat Ini</p>
-    <div class="flex items-baseline space-x-1 mt-1">
-      <span class="text-sm opacity-90 font-medium">Rp</span>
-      <h2 id="txtSaldoPublik" class="text-2xl font-black tracking-tight">Memuat...</h2>
+  <div id="boxDashboard" class="hidden space-y-6">
+    
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex justify-between items-center">
+      <div>
+        <h1 id="lblNamaMasjid" class="text-xs font-black text-gray-800">Masjid At-Taqwa</h1>
+        <p class="text-[10px] text-emerald-700 font-bold flex items-center mt-0.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse mr-1"></span> Sesi Pengurus Aktif
+        </p>
+      </div>
+      <div class="text-right">
+        <p class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Saldo Live Kas</p>
+        <p class="text-sm font-black text-gray-800">Rp <span id="lblSaldoReal">0</span></p>
+      </div>
     </div>
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+      <h3 class="text-xs font-bold text-gray-800 flex items-center border-b pb-2">
+        <span class="mr-1.5">💰</span> Catat Transaksi Arus Kas
+      </h3>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Arus Kas</label>
+          <select id="selArus" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none">
+            <option value="Masuk">Uang Masuk (+)</option>
+            <option value="Keluar">Uang Keluar (-)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Kategori Alokasi Dana</label>
+          <select id="selKategori" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none">
+            <option value="">Memuat kategori...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Nominal (Rp)</label>
+          <input type="number" id="numNominal" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none" placeholder="Contoh: 100000">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Nama Jamaah / Penerima</label>
+          <input type="text" id="txtJamaah" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none" placeholder="Kosongkan jika Hamba Allah">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Keterangan Nota</label>
+        <input type="text" id="txtKeterangan" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none" placeholder="Contoh: Infak jumat tromol 1 atau Pembelian sapu lidi">
+      </div>
+
+      <button onclick="simpanTransaksiKas()" class="w-full p-3 hijau-masjid text-white rounded-xl text-xs font-bold shadow-sm hover:bg-emerald-900 transition">Amanah, Simpan Transaksi</button>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+      <h3 class="text-xs font-bold text-gray-800 flex items-center border-b pb-2">
+        <span class="mr-1.5">📦</span> Log Mutasi Inventaris & Aset
+      </h3>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Nama Barang / Aset</label>
+          <input type="text" id="txtBarang" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none" placeholder="Contoh: Karpet Sajadah">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Jenis Mutasi Barang</label>
+          <select id="selMutasiBarang" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none">
+            <option value="masuk">Barang Masuk (+)</option>
+            <option value="keluar">Barang Keluar / Rusak (-)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Kuantitas / Jumlah</label>
+          <input type="number" id="numKuantitas" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none" placeholder="Contoh: 2">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Nama Donatur (Jika Infak)</label>
+          <input type="text" id="txtDonaturBarang" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none" placeholder="Contoh: Hamba Allah">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Alokasi Penempatan Ruang</label>
+        <input type="text" id="txtAlokasiBarang" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none" placeholder="Contoh: Ruang Utama Imam">
+      </div>
+
+      <button onclick="simpanMutasiInventaris()" class="w-full p-3 bg-slate-700 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-slate-800 transition">Update Log Inventaris</button>
+    </div>
+
   </div>
 
-  <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-      <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Riwayat Transaksi Terakhir</h3>
-      <input type="text" id="txtCariMutasi" oninput="filterDataMutasi()" 
-             placeholder="🔎 Cari nama donatur, atau nota..." 
-             class="w-full sm:w-64 text-xs px-3 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:border-emerald-600 bg-gray-50">
-    </div>
-
-    <div id="loadingText" class="text-xs text-gray-400 text-center py-4">Menghubungkan ke server amanah...</div>
-    <div id="kontainerMutasi" class="space-y-3 hidden"></div>
-  </div>
-
-  <div class="text-center py-8 text-[11px] text-gray-400 space-y-1">
+  <div class="text-center py-6 text-[11px] text-gray-400 space-y-1">
     <p>Dikembangkan secara swadaya oleh <a href="https://www.kasmasjid.web.id" target="_blank" class="text-emerald-700 font-bold hover:underline">KasMasjid</a></p>
-    <p class="text-[9px] opacity-75">Sistem Alur Kerja Keuangan Mandiri • Dibangun untuk Kepercayaan Aset Digital</p>
+    <p class="text-[9px] opacity-75">Sovereign Financial Workflow System • Built for Digital Asset Trust</p>
   </div>
 
   <script>
-    const URL_LOGO_MASJID = "https://ik.imagekit.io/kulinaweb/logo-attaqwa.png?updatedAt=1781786644208"; 
-    const API_URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzBGi_JETGdPf2oJ7xp0rYhThmofSTnkpE3WST387258xJb4uV9NGHQlnO2Mcea6YZe/exec";
-
-    let masterDataMutasi = [];
-
-    function inisialisasiLogoHeader() {
-      const img = document.getElementById('imgLogoHeader');
-      const fallback = document.getElementById('fallbackIcon');
-      if (URL_LOGO_MASJID && URL_LOGO_MASJID.trim() !== "") {
-        img.src = URL_LOGO_MASJID;
-        img.classList.remove('hidden');
-        fallback.classList.add('hidden');
-      }
+    function eksekusiLogin() {
+      const u = document.getElementById('txtUser').value;
+      const p = document.getElementById('txtPass').value;
+      
+      if(!u || !p) { alert('Username dan Password wajib diisi lengkap.'); return; }
+      
+      const payload = JSON.stringify({ aksi: "login", username: u, password: p });
+      
+      google.script.run.withSuccessHandler(function(responseStr) {
+        const res = JSON.parse(responseStr);
+        if(res.success) {
+          document.getElementById('lblNamaMasjid').innerText = res.namaMasjid;
+          document.getElementById('lblSaldoReal').innerText = Number(res.saldo).toLocaleString('id-ID');
+          document.getElementById('boxLogin').classList.add('hidden');
+          document.getElementById('boxDashboard').classList.remove('hidden');
+          
+          // PERBAIKAN 1: Memicu pemuatan kategori dinamis begitu dasbor takmir terbuka sukses
+          muatKategoriDinamis();
+        } else {
+          alert(res.message);
+        }
+      }).prosesRequestInternal(payload);
     }
 
-    function muatDataPublikVercel() {
-      inisialisasiLogoHeader();
-
-      fetch(API_URL_APPS_SCRIPT, {
-        method: "POST",
-        mode: "cors",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ aksi: "ambilDataPublik" })
-      })
-      .then(response => response.json())
-      .then(res => {
-        // PERBAIKAN: Menyatukan logika parsing data ke dalam block fetch yang benar
-        let data = res;
-        if (typeof res === "string") {
-          data = JSON.parse(res);
-        }
-
-        if (data && data.saldo !== undefined) {
-          document.getElementById('txtSaldoPublik').innerText = Number(data.saldo).toLocaleString('id-ID');
-        } else {
-          document.getElementById('txtSaldoPublik').innerText = "0";
+    function muatKategoriDinamis() {
+      google.script.run.withSuccessHandler(function(kategoriJson) {
+        const daftarKategori = JSON.parse(kategoriJson);
+        const selectKategori = document.getElementById('selKategori');
+        
+        selectKategori.innerHTML = "";
+        
+        if (!daftarKategori || daftarKategori.length === 0) {
+          selectKategori.innerHTML = '<option value="">Gagal memuat / Sheet Kosong</option>';
+          return;
         }
         
-        if (data && data.mutasi) {
-          masterDataMutasi = data.mutasi;
-          tampilkanKeLayar(masterDataMutasi);
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('loadingText').innerText = "Gagal menyinkronkan data amanah.";
-        document.getElementById('txtSaldoPublik').innerText = "0";
-      });
-    }
-
-    function tampilkanKeLayar(daftarMutasi) {
-      const kontainer = document.getElementById('kontainerMutasi');
-      document.getElementById('loadingText').classList.add('hidden');
-      kontainer.classList.remove('hidden');
-      kontainer.innerHTML = "";
-
-      if (daftarMutasi && daftarMutasi.length > 0) {
-        daftarMutasi.forEach(item => {
-          const div = document.createElement('div');
-          div.className = "p-3 rounded-xl border-l-4 text-xs bg-gray-50 mb-2 " + 
-                        (item.jenis === "Masuk" ? "border-emerald-600" : "border-red-500");
-          
-          div.innerHTML = `
-            <div class="flex justify-between font-bold text-gray-700">
-              <span>${item.nama}</span>
-              <span class="${item.jenis === 'Masuk' ? 'text-emerald-700' : 'text-red-600'}">
-                ${item.jenis === 'Masuk' ? '+' : '-'} Rp ${Number(item.nominal).toLocaleString('id-ID')}
-              </span>
-            </div>
-            <div class="text-gray-400 text-[10px] mt-1 flex justify-between">
-              <span>${item.keterangan}</span>
-              <span>${item.tanggal}</span>
-            </div>
-          `;
-          kontainer.appendChild(div);
+        daftarKategori.forEach(function(kategori) {
+          const opt = document.createElement('option');
+          opt.value = kategori;
+          opt.innerText = kategori;
+          selectKategori.appendChild(opt);
         });
-      } else {
-        kontainer.innerHTML = "<div class='text-center text-xs text-gray-400 py-4'>Data pencarian tidak ditemukan.</div>";
-      }
+      }).ambilKategoriInternal();
     }
-
-    function filterDataMutasi() {
-      const kataKunci = document.getElementById('txtCariMutasi').value.toLowerCase().trim();
+    
+    function simpanTransaksiKas() {
+      const arus = document.getElementById('selArus').value;
+      const kat = document.getElementById('selKategori').value;
+      const nom = document.getElementById('numNominal').value;
+      const jam = document.getElementById('txtJamaah').value;
+      const ket = document.getElementById('txtKeterangan').value;
       
-      const hasilSaring = masterDataMutasi.filter(item => {
-        return item.nama.toLowerCase().includes(kataKunci) || 
-               item.keterangan.toLowerCase().includes(kataKunci) ||
-               item.tanggal.toLowerCase().includes(kataKunci);
+      if(!nom) { alert('Nominal transaksi kas tidak boleh kosong.'); return; }
+      
+      const payload = JSON.stringify({
+        aksi: "simpanKas",
+        arusKas: arus,
+        kategoriDana: kat,
+        nominal: nom,
+        namaJamaah: jam,
+        keterangan: ket
       });
       
-      tampilkanKeLayar(hasilSaring);
+      google.script.run.withSuccessHandler(function(responseStr) {
+        const res = JSON.parse(responseStr);
+        alert(res.message);
+        // PERBAIKAN 2: Mengoreksi pemanggilan nama fungsi pembersih yang benar
+        if(res.success) { resetFormKas(); }
+      }).prosesRequestInternal(payload);
     }
-  </script>  
+
+    function simpanMutasiInventaris() {
+      const brg = document.getElementById('txtBarang').value;
+      const jenis = document.getElementById('selMutasiBarang').value;
+      const qty = document.getElementById('numKuantitas').value;
+      const don = document.getElementById('txtDonaturBarang').value;
+      const alk = document.getElementById('txtAlokasiBarang').value;
+      
+      if(!brg || !qty) { alert('Nama barang dan Kuantitas log wajib diisi.'); return; }
+      
+      const payload = JSON.stringify({
+        aksi: "simpanInventaris",
+        namaBarang: brg,
+        jenisMutasi: jenis,
+        kuantitas: qty,
+        namaDonatur: don,
+        alokasi: alk
+      });
+      
+      google.script.run.withSuccessHandler(function(responseStr) {
+        const res = JSON.parse(responseStr);
+        alert(res.message);
+        // PERBAIKAN 3: Mengoreksi pemanggilan nama fungsi pembersih yang benar
+        if(res.success) { resetFormInventaris(); }
+      }).prosesRequestInternal(payload);
+    }
+
+// ISI OTOMATIS SAAT HALAMAN DIBUKA
+document.addEventListener("DOMContentLoaded", function() {
+  const savedUser = localStorage.getItem("kas_user");
+  const savedPass = localStorage.getItem("kas_pass");
+  if (savedUser && savedPass) {
+    document.getElementById('txtUser').value = savedUser;
+    document.getElementById('txtPass').value = savedPass;
+    document.getElementById('chkIngatSaya').checked = true;
+  }
+});
+
+// EDIT DI DALAM FUNGSI EKSEKUSI LOGIN SEBELUM GOOGLE.SCRIPT.RUN
+function eksekusiLogin() {
+  const u = document.getElementById('txtUser').value;
+  const p = document.getElementById('txtPass').value;
+  const ingat = document.getElementById('chkIngatSaya').checked;
+
+  if(!u || !p) { alert('Username dan Password wajib diisi.'); return; }
+
+  if (ingat) {
+    localStorage.setItem("kas_user", u);
+    localStorage.setItem("kas_pass", p); // Tersimpan aman secara lokal di sandbox PWA HP Takmir
+  } else {
+    localStorage.removeItem("kas_user");
+    localStorage.removeItem("kas_pass");
+  }
+  
+  // ... sisa kode google.script.run Bapak tetap sama ...
+}
+
+    // NAMA FUNGSI ASLI TANPA EMBEL-EMBEL KATA "lokasi" KETIKA DIDEKLARASIKAN
+    function resetFormKas() {
+      document.getElementById('numNominal').value = "";
+      document.getElementById('txtJamaah').value = "";
+      document.getElementById('txtKeterangan').value = "";
+    }
+
+    function resetFormInventaris() {
+      document.getElementById('txtBarang').value = "";
+      document.getElementById('numKuantitas').value = "";
+      document.getElementById('txtDonaturBarang').value = "";
+      document.getElementById('txtAlokasiBarang').value = "";
+    }
+  </script>
 </body>
 </html>
